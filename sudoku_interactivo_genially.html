@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acertijo - Sudoku 6x6</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:18px; font-family: Arial, sans-serif; color:#202124; background:#fff; text-align:center; }
+  .game { width:min(100%, 560px); margin:auto; }
+  h1 { font-size: clamp(28px, 6vw, 42px); letter-spacing:1px; margin:8px 0 12px; }
+  .instruction { font-size:clamp(16px, 3.5vw, 21px); line-height:1.35; margin:0 auto 18px; }
+  .grid { display:grid; grid-template-columns:repeat(6, 1fr); width:min(100%, 450px); margin:0 auto 18px; border:3px solid #222; }
+  .cell { aspect-ratio:1; min-width:0; border:1px solid #777; display:flex; align-items:center; justify-content:center; }
+  .cell:nth-child(6n+3) { border-right:3px solid #222; }
+  .cell:nth-child(6n+4) { border-left:0; }
+  .cell:nth-child(n+7):nth-child(-n+12),
+  .cell:nth-child(n+19):nth-child(-n+24) { border-bottom:3px solid #222; }
+  .cell input { width:100%; height:100%; border:0; outline:0; text-align:center; font-size:clamp(20px, 5vw, 34px); font-weight:600; background:#fff; color:#1457a6; padding:0; border-radius:0; }
+  .cell input:focus { background:#eaf3ff; box-shadow:inset 0 0 0 2px #3478c8; }
+  .cell.fixed { font-size:clamp(20px, 5vw, 34px); font-weight:700; background:#f0f0f0; }
+  .controls { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; }
+  button { border:0; border-radius:8px; padding:12px 18px; font-size:16px; font-weight:700; cursor:pointer; background:#245da8; color:white; }
+  button.secondary { background:#555; }
+  #message { min-height:28px; margin:14px 0 0; font-size:17px; font-weight:700; }
+  .hint { color:#555; font-size:13px; margin-top:8px; }
+</style>
+</head>
+<body>
+<main class="game">
+  <h1>ACERTIJO</h1>
+  <p class="instruction">Completen el siguiente <strong>SUDOKU</strong> con los números del 1 al 6:</p>
+  <div class="grid" id="grid" aria-label="Sudoku de seis por seis"></div>
+  <div class="controls">
+    <button type="button" id="check">Comprobar respuesta</button>
+    <button type="button" class="secondary" id="clear">Borrar respuestas</button>
+  </div>
+  <p id="message" role="status" aria-live="polite"></p>
+  <p class="hint">Escriban un número del 1 al 6 en cada casillero vacío.</p>
+</main>
+<script>
+const puzzle = [
+  [0,0,5,6,0,1],
+  [6,0,0,0,0,0],
+  [3,0,0,0,0,0],
+  [2,0,0,0,4,5],
+  [0,3,2,0,1,0],
+  [0,4,0,5,2,0]
+];
+const solution = [
+  [4,2,5,6,3,1],
+  [6,1,3,2,5,4],
+  [3,5,4,1,6,2],
+  [2,6,1,3,4,5],
+  [5,3,2,4,1,6],
+  [1,4,6,5,2,3]
+];
+const grid = document.getElementById('grid');
+const inputs = [];
+puzzle.forEach((row, r) => row.forEach((value, c) => {
+  const cell = document.createElement('div');
+  cell.className = 'cell' + (value ? ' fixed' : '');
+  if (value) {
+    cell.textContent = value;
+  } else {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'numeric';
+    input.pattern = '[1-6]';
+    input.maxLength = 1;
+    input.autocomplete = 'off';
+    input.setAttribute('aria-label', `Fila ${r+1}, columna ${c+1}`);
+    input.dataset.row = r;
+    input.dataset.col = c;
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/[^1-6]/g, '').slice(0,1);
+      document.getElementById('message').textContent = '';
+    });
+    cell.appendChild(input);
+    inputs.push(input);
+  }
+  grid.appendChild(cell);
+}));
+document.getElementById('check').addEventListener('click', () => {
+  let complete = true, correct = true;
+  inputs.forEach(input => {
+    const r = Number(input.dataset.row), c = Number(input.dataset.col);
+    if (!input.value) complete = false;
+    if (Number(input.value) !== solution[r][c]) correct = false;
+  });
+  const message = document.getElementById('message');
+  if (!complete) message.textContent = 'Todavía quedan casilleros sin completar.';
+  else if (correct) message.textContent = '¡Excelente! ¡Acertijo resuelto! Ya pueden continuar con la siguiente pista.';
+  else message.textContent = 'Hay algunos números incorrectos. ¡Revisen el Sudoku e inténtenlo nuevamente!';
+});
+document.getElementById('clear').addEventListener('click', () => {
+  inputs.forEach(input => input.value = '');
+  document.getElementById('message').textContent = '';
+});
+</script>
+</body>
+</html>
